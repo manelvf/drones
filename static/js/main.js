@@ -64,7 +64,6 @@ window.requestAnimFrame = (function(callback) {
 
 function init(sx,sy) {
   let tx, ty, p, f;
-    console.log("init")
 
   Game = Object.assign(Game,gameData);
   Game.status = GameStates.RUNNING
