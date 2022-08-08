@@ -1,4 +1,13 @@
-var gameData = {
+
+
+const GameStates = {
+    START: "START",
+    RUNNING: "RUNNING",
+}
+
+
+
+const gameData = {
   restart: false,
   canvas: null,
   screenW: null,
@@ -21,7 +30,9 @@ var gameData = {
   content: []
 }
 
+
 var Game = {
+  status: GameStates.START,
   polygon:Polygon,
   startFPS: function() {
     Game.FPS = Game.FPSCounter;
@@ -49,22 +60,25 @@ window.requestAnimFrame = (function(callback) {
   };
 })();
 
-xxx = Math.PI*0.5;
+
 
 function init(sx,sy) {
-  var p,k;
+  let tx, ty, p, f;
+    console.log("init")
 
-  Game = $.extend(Game,gameData);
+  Game = Object.assign(Game,gameData);
+  Game.status = GameStates.RUNNING
+
   Game.enemies = [];
   Game.rocks = [];
 
   // rocks
-  for (k = 0; k<Game.nofRocks; k++) {
+  for (let k = 0; k<Game.nofRocks; k++) {
     Game.rocks.push(rockCreate());
   }
 
   // enemies 
-  for (k = 0; k<Game.nofEnemies; k++) {
+  for (let k = 0; k<Game.nofEnemies; k++) {
     tx = rand(0, innerWidth);
     ty = rand(0, innerHeight);
     f = 4;
@@ -90,13 +104,13 @@ function init(sx,sy) {
 
 
 function cycle() {
-
   Game.bgPattern.draw(); 
 
 
   Game.killList = [];
   for(k=0; k< Game.rocks.length; k++) {
     Game.rocks[k].draw();
+
     if (Game.rocks[k].checkHit(Game.ship)) {
       Game.rocks[k].finish(Game.rocks,k, rockCreate());
     }
@@ -127,6 +141,7 @@ function cycle() {
   Game.curTime = Date.now(); 
 
   if (Game.restart) {
+    Game.status = GameStates.START
     drawTitleScreen(true);
   } else {
     requestAnimFrame( function() {
@@ -137,26 +152,27 @@ function cycle() {
 }
 
 
-Zepto(function($) {
-  var i,j,k,f,s;
-  var tx, ty;
-
+function start() {
   gameData.screenW = innerWidth;
   gameData.screenH = innerHeight;
 
-  gameData.canvas = $("<canvas width='"+ innerWidth +"px' height='"+ innerHeight +"px'></canvas>");
-  $('body').append(gameData.canvas);
+  canvas.width = innerWidth
+  canvas.height = innerHeight
+  gameData.canvas = canvas
 
-  if (gameData.canvas[0].getContext) {
-    gameData.ctx = gameData.canvas[0].getContext("2d");
+  if (canvas.getContext) {
+    gameData.ctx = canvas.getContext("2d");
     gameData.bgPattern = doPattern(gameData.ctx); // create a background pattern
     drawTitleScreen();
+  } else {
+    throw new Error("Canvas element not supported")
   }
 
-});
+}
+
 
 function drawTitleScreen(restart) {
-  var ctx = gameData.ctx;
+  const ctx = gameData.ctx;
 
   gameData.bgPattern.draw(); 
   //ctx.beginPath();
@@ -173,16 +189,16 @@ function drawTitleScreen(restart) {
     ctx.fillText("then Just Kill All the Humans and Survive", gameData.screenW * 0.33, 140);
   }
 
-  $(gameData.canvas).off("click");
-  $(gameData.canvas).on("click", function(e) {
-    init(e.offsetX,e.offsetY);
-  });
+  document.addEventListener("click", function(e) {
+    if (Game.status == GameStates.START) {
+        init(e.offsetX,e.offsetY);
+    }
+  }, false);
 
 }
 
 function startEvents() {
-  Game.canvas.off('mousemove');
-  Game.canvas.on('mousemove', function(e) {
+  document.addEventListener('mousemove', function(e) {
     Game.ship.goNear(e.offsetX,e.offsetY);
   });
 }
@@ -241,3 +257,16 @@ function zeropad(v,n) {
   }
   return s+v;
 }
+
+
+function ready(fn) {
+  if (document.readyState != 'loading'){
+    fn();
+  } else {
+    document.addEventListener('DOMContentLoaded', fn);
+  }
+}
+
+
+ready(start)
+
